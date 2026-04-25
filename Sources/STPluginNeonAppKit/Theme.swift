@@ -54,7 +54,7 @@ public struct Theme {
         }
         
         public func color(forToken tokenName: TokenName) -> NSColor? {
-            colors[tokenName]
+            Theme.lookupHierarchical(tokenName, in: colors)
         }
     }
 
@@ -93,7 +93,26 @@ public struct Theme {
         }
 
         public func font(forToken tokenName: TokenName) -> NSFont? {
-            fonts[tokenName]
+            Theme.lookupHierarchical(tokenName, in: fonts)
         }
+    }
+
+    /// Tree-sitter capture names are dotted (e.g. `type.builtin`,
+    /// `keyword.repeat`). Themes typically only define the parent
+    /// (`type`, `keyword`); the child should fall back to it. This mirrors
+    /// the convention used by Helix, Neovim's nvim-treesitter, and
+    /// vscode-textmate. Without this fallback, captures like
+    /// `@type.builtin` and `@keyword.repeat` render as plain text.
+    fileprivate static func lookupHierarchical<V>(
+        _ tokenName: TokenName,
+        in dict: [TokenName: V]
+    ) -> V? {
+        if let exact = dict[tokenName] { return exact }
+        var name = tokenName.description
+        while let dot = name.lastIndex(of: ".") {
+            name = String(name[..<dot])
+            if let parent = dict[TokenName(name)] { return parent }
+        }
+        return nil
     }
 }
