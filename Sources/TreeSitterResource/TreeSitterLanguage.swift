@@ -36,6 +36,8 @@ import TreeSitterSwift
 import TreeSitterSwiftQueries
 import TreeSitterSQL
 import TreeSitterSQLQueries
+import TreeSitterSQLOrcl
+import TreeSitterSQLOrclQueries
 import TreeSitterTOML
 import TreeSitterTOMLQueries
 import TreeSitterTypeScript
@@ -61,6 +63,7 @@ public enum TreeSitterLanguage: CaseIterable, Hashable {
     case rust
     case swift
     case sql
+    case sqlOrcl
     case toml
     case typescript
     case yaml
@@ -101,6 +104,8 @@ public enum TreeSitterLanguage: CaseIterable, Hashable {
             tree_sitter_swift()
         case .sql:
             tree_sitter_sql()
+        case .sqlOrcl:
+            tree_sitter_sql_orcl()
         case .toml:
             tree_sitter_toml()
         case .typescript:
@@ -146,6 +151,8 @@ public enum TreeSitterLanguage: CaseIterable, Hashable {
             TreeSitterSwiftQueries.Query.highlightsFileURL
         case .sql:
             TreeSitterSQLQueries.Query.highlightsFileURL
+        case .sqlOrcl:
+            TreeSitterSQLOrclQueries.Query.highlightsFileURL
         case .toml:
             TreeSitterTOMLQueries.Query.highlightsFileURL
         case .typescript:
@@ -190,6 +197,8 @@ public enum TreeSitterLanguage: CaseIterable, Hashable {
         case .swift:
             TreeSitterSwiftQueries.Query.localsFileURL
         case .sql:
+            nil
+        case .sqlOrcl:
             nil
         case .toml:
             nil
