@@ -68,14 +68,11 @@
  (keyword_following)
  (keyword_first)
  (keyword_current_timestamp)
- (keyword_immutable)
- (keyword_atomic)
  (keyword_parallel)
- (keyword_leakproof)
- (keyword_safe)
- (keyword_cost)
- (keyword_strict)
 ] @attribute
+
+;; Removed (orphan tokens after dropping Postgres CREATE FUNCTION rules):
+;;   keyword_immutable, atomic, leakproof, safe, cost, strict, volatile
 
 [
  (keyword_materialized)
@@ -92,7 +89,6 @@
  (keyword_avro)
  (keyword_jsonfile)
  (keyword_sequencefile)
- (keyword_volatile)
 ] @storageclass
 
 [
@@ -220,13 +216,10 @@
   (keyword_optimize)
   (keyword_vacuum)
   (keyword_cache)
-  (keyword_language)
-  (keyword_called)
   (keyword_conflict)
   (keyword_declare)
   (keyword_filter)
   (keyword_function)
-  (keyword_input)
   (keyword_name)
   (keyword_oid)
   (keyword_oids)
@@ -235,16 +228,10 @@
   (keyword_regnamespace)
   (keyword_regproc)
   (keyword_regtype)
-  (keyword_restricted)
   (keyword_return)
-  (keyword_returns)
   (keyword_separator)
-  (keyword_setof)
-  (keyword_stable)
-  (keyword_support)
   (keyword_tblproperties)
   (keyword_trigger)
-  (keyword_unsafe)
   (keyword_admin)
   (keyword_connection)
   (keyword_cycle)
@@ -271,7 +258,6 @@
   (keyword_valid)
   (keyword_action)
   (keyword_definer)
-  (keyword_invoker)
   (keyword_enable)
   (keyword_disable)
   (keyword_security)
@@ -283,7 +269,6 @@
   (keyword_version)
   (keyword_out)
   (keyword_inout)
-  (keyword_variadic)
   (keyword_ordinality)
   (keyword_session)
   (keyword_isolation)
@@ -303,17 +288,13 @@
   (keyword_snapshot)
   (keyword_characteristics)
   (keyword_off)
-  (keyword_follows)
-  (keyword_precedes)
   (keyword_each)
   (keyword_instead)
   (keyword_of)
-  (keyword_initially)
   (keyword_old)
   (keyword_new)
   (keyword_referencing)
   (keyword_statement)
-  (keyword_execute)
   (keyword_procedure)
   (keyword_copy)
   (keyword_delimiter)
@@ -526,11 +507,16 @@
   (keyword_raise)
 ] @keyword.exception
 
-;; PL/SQL declaration / subprogram keywords actually wired into rules.
-;; Other keywords (nocopy, deterministic, pipelined, authid, package, body,
-;; pragma) are tokenised but not yet consumed by any rule.
+;; PL/SQL declaration / subprogram keywords (wired into Oracle CREATE
+;; PROCEDURE/FUNCTION/PACKAGE/PACKAGE BODY rules in plsql.js + create.js).
 [
   (keyword_constant)
+  (keyword_package)
+  (keyword_body)
+  (keyword_authid)
+  (keyword_deterministic)
+  (keyword_pipelined)
+  (keyword_nocopy)
 ] @keyword
 
 ;; PL/SQL declared variable names
