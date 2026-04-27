@@ -12,11 +12,10 @@ let package = Package(
             targets: ["STPluginNeon"]),
     ],
     dependencies: [
-        // Use the local sibling. See Macintora project notes — Macintora's
-        // pbxproj declares STTextView as a local package, and resolving this
-        // transitive reference to the same path avoids the conflicting-
-        // identity SwiftPM warning.
-        .package(path: "../STTextView"),
+        // Pinned to iliasaz/STTextView's `macintora` branch — Macintora
+        // consumes this fork transitively and SwiftPM requires the same
+        // identity for the shared package.
+        .package(url: "https://github.com/iliasaz/STTextView.git", branch: "macintora"),
         .package(url: "https://github.com/kylemacomber/Neon", revision: "ce8d252"),
         .package(url: "https://github.com/ChimeHQ/SwiftTreeSitter", from: "0.9.0")
     ],
