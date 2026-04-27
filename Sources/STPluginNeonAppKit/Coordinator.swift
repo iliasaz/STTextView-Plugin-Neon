@@ -39,28 +39,26 @@ public class Coordinator {
         // set textview default font to theme default font
         textView.font = theme.font(forToken: "plain") ?? textView.font
 
-        highlighter = Neon.Highlighter(textInterface: STTextViewSystemInterface(textView: textView) { neonToken in
+        highlighter = Neon.Highlighter(textInterface: STTextViewSystemInterface(textView: textView) { [weak textView] neonToken in
+            guard let textView else { return nil }
             var attributes: [NSAttributedString.Key: Any] = [:]
-            attributes[.font] = textView.font
 
-            if let themeColor = theme.color(forToken: TokenName(neonToken.name)) {
+            // Only include `.font` when the theme overrides it. `clearStyle`
+            // already resets the range to `textView.font`, so writing the same
+            // default font per token forces N redundant `addAttributes` writes
+            // through `NSTextStorage`, each marking layout dirty in STTextView
+            // — the dominant cost of the per-token push path.
+            let tokenName = TokenName(neonToken.name)
+            let defaultFont = textView.font
+
+            if let themeColor = theme.color(forToken: tokenName) {
                 attributes[.foregroundColor] = themeColor
-                
-                // TODO: Remove this later.
-                // print("themeColor \(themeColor) for token \(TokenName(neonToken.name))")
-
-                if let themeFont = theme.font(forToken: TokenName(neonToken.name)) {
-                    attributes[.font] = themeFont
-                }
             } else if let themeDefaultColor = theme.color(forToken: "plain") {
                 attributes[.foregroundColor] = themeDefaultColor
-                
-                // TODO: Remove this later.
-                // print("themeDefaultColor \(themeDefaultColor) for token \(TokenName(neonToken.name))")
+            }
 
-                if let themeFont = theme.font(forToken: TokenName(neonToken.name)) {
-                    attributes[.font] = themeFont
-                }
+            if let themeFont = theme.font(forToken: tokenName), themeFont != defaultFont {
+                attributes[.font] = themeFont
             }
 
             return !attributes.isEmpty ? attributes : nil
