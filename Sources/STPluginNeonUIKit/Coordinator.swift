@@ -16,9 +16,14 @@ public class Coordinator {
     private let tsLanguage: SwiftTreeSitter.Language
     private let tsClient: TreeSitterClient
     private var prevViewportRange: NSTextRange?
+    private let onTreeUpdated: NeonPlugin.TreeUpdateHandler?
 
-    init(textView: STTextView, theme: Theme, language: TreeSitterLanguage) {
+    init(textView: STTextView,
+         theme: Theme,
+         language: TreeSitterLanguage,
+         onTreeUpdated: NeonPlugin.TreeUpdateHandler? = nil) {
         self.language = language
+        self.onTreeUpdated = onTreeUpdated
         tsLanguage = Language(language: language.parser)
 
         tsClient = try! TreeSitterClient(language: tsLanguage) { codePointIndex in
@@ -72,7 +77,8 @@ public class Coordinator {
                                   delta: textView.textContentManager.length,
                                   limit: textView.textContentManager.length,
                                   readHandler: Parser.readFunction(for: textView.textContentManager.attributedString(in: nil)?.string ?? ""),
-                                  completionHandler: {
+                                  completionHandler: { [weak self] in
+            self?.notifyTreeUpdated()
         })
     }
 
@@ -104,8 +110,24 @@ public class Coordinator {
         /// implement maybe a reader function that read what needed only (is it possible?)
         if let str = textContentManager.attributedString(in: nil)?.string {
             let readFunction = Parser.readFunction(for: str)
-            tsClient.didChangeContent(in: range, delta: delta, limit: limit, readHandler: readFunction, completionHandler: {})
+            tsClient.didChangeContent(in: range, delta: delta, limit: limit, readHandler: readFunction, completionHandler: { [weak self] in
+                self?.notifyTreeUpdated()
+            })
         }
 
+    }
+
+    /// Fetches the latest stable tree from `TreeSitterClient` and forwards it to
+    /// the host's `onTreeUpdated` handler. No-op when no handler was provided.
+    /// `currentTree(_:)` dispatches its callback to the main thread, matching
+    /// this class's `@MainActor` isolation.
+    private func notifyTreeUpdated() {
+        guard let onTreeUpdated else { return }
+        tsClient.currentTree { result in
+            guard case .success(let tree) = result else { return }
+            MainActor.assumeIsolated {
+                onTreeUpdated(tree)
+            }
+        }
     }
 }
