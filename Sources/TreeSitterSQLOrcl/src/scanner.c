@@ -6,7 +6,8 @@
 enum TokenType {
   DOLLAR_QUOTED_STRING_START_TAG,
   DOLLAR_QUOTED_STRING_END_TAG,
-  DOLLAR_QUOTED_STRING
+  DOLLAR_QUOTED_STRING,
+  SLASH_TERMINATOR
 };
 
 #define MALLOC_STRING_SIZE 1024
@@ -82,6 +83,40 @@ static char* scan_dollar_string_tag(TSLexer *lexer) {
 
 bool tree_sitter_sql_orcl_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
   LexerState *state = (LexerState*)payload;
+
+  // SLASH_TERMINATOR: a bare `/` followed (on the same line) only by
+  // horizontal whitespace before a newline or end-of-input. The grammar
+  // only marks this symbol as valid between top-level units, so the
+  // division operator inside expressions (`1 / 2`) never reaches here.
+  // The external scanner runs before `extras` consume whitespace, so we
+  // skip leading whitespace (spaces, tabs, newlines) ourselves to find
+  // the `/`.
+  if (valid_symbols[SLASH_TERMINATOR]) {
+    // Skip leading whitespace — the scanner runs before `extras` consume
+    // it. `advance(skip=true)` keeps the skipped chars out of the token.
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+           lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+      lexer->advance(lexer, true);
+    }
+    if (lexer->lookahead == '/') {
+      lexer->advance(lexer, false);
+      lexer->mark_end(lexer);
+      // Only horizontal whitespace may follow the `/` on the same line —
+      // anything else (e.g. `* ` for marginalia or an arithmetic operand)
+      // means this isn't a SQL*Plus directive.
+      while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+        lexer->advance(lexer, false);
+      }
+      if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer)) {
+        lexer->result_symbol = SLASH_TERMINATOR;
+        return true;
+      }
+      return false;
+    }
+    // Lookahead wasn't `/` after whitespace; fall through so the
+    // dollar-quoted handlers below can still try.
+  }
+
   if (valid_symbols[DOLLAR_QUOTED_STRING_START_TAG] && state->start_tag == NULL) {
     while (iswspace(lexer->lookahead)) lexer->advance(lexer, true);
 
